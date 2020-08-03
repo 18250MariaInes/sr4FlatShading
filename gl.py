@@ -2,18 +2,13 @@
 Maria Ines Vasquez Figueroa
 18250
 Gráficas
-SR3 ObjModel
+SR4 Flat Shading
 Funciones
 """
 import struct
 from obj import Obj
 import random
-import numpy as np
-from collections import namedtuple
 
-V2 = namedtuple('Point2', ['x', 'y'])
-V3 = namedtuple('Point3', ['x', 'y', 'z'])
-V4 = namedtuple('Point4', ['x', 'y', 'z','w'])
 
 def char(c):
     # 1 byte
@@ -301,13 +296,15 @@ class Render(object):
                     if z > self.zbuffer[y][x]:
                         self.glVertex_coord(x, y, color)
                         self.zbuffer[y][x] = z
+    #funciones para reemplazar numpy del ejemplo de Carlos
+    #Realiza la resta entre 2 listas
     def subtract(self, x0, x1, y0, y1, z0, z1):
         res=[]
         res.append(x0-x1)
         res.append(y0-y1)
         res.append(z0-z1)
         return res
-    
+    #realiza producto cruz entre dos listas
     def cross(self, v0, v1):
         res=[]
         res.append(v0[1]*v1[2]-v1[1]*v0[2])
@@ -315,10 +312,13 @@ class Render(object):
         res.append(v0[0]*v1[1]-v1[0]*v0[1])
         return res
 
+    #Calcula normal de Frobenius
     def frobenius(self, norm):
         return((norm[0]**2+norm[1]**2+norm[2]**2)**(1/2))
 
+    #calcula la division entre elementos de una lista y la normal de frobenius
     def division(self, norm, frobenius):
+        #si la division es entre cero regresa un not a number
         if (frobenius==0):
             res=[]
             res.append(float('NaN'))
@@ -332,6 +332,10 @@ class Render(object):
             res.append(norm[1]/ frobenius)
             res.append(norm[2]/ frobenius)
             return res
+    
+    #realiza producto punto entre la matriz y la luz
+    def dot(self, normal, lightx, lighty, lightz):
+        return (normal[0]*lightx+normal[1]*lighty+normal[2]*lightz)
 
     def loadModel(self, filename, translate, scale, isWireframe = False): #funcion para crear modelo Obj
         model = Obj(filename)
@@ -339,7 +343,6 @@ class Render(object):
         lighty=0
         lightz=1
 
-        light=V3(lightx, lighty, lightz)
         for face in model.faces:
             vertCount = len(face) #conexion entre vertices para crear Wireframe
             if isWireframe:
@@ -370,10 +373,7 @@ class Render(object):
                 y2 = int(v2[1] * scale[1]  + translate[1])
                 z2 = int(v2[2] * scale[2]  + translate[2])
 
-                ##cambiar esta parte de mi por matematica propia
-                v0=V3(x0, y0, z0)
-                v1=V3(x1, y1, z1)
-                v2=V3(x2, y2, z2)
+                #codigo de pruebas para modulo matematico
                 """print("------------SUBSTRACT----------------------")
                 print(v1)
                 print(v0)
@@ -381,21 +381,29 @@ class Render(object):
                 print(self.subtract(x1, x0, y1, y0, z1, z0))
                 print("------------CROSS----------------------")
                 print(np.cross(np.subtract(v1,v0), np.subtract(v2,v0)))
-                print(self.cross(self.subtract(x1, x0, y1, y0, z1, z0), self.subtract(x2, x0, y2, y0, z2, z0)))"""
-
-
-
+                print(self.cross(self.subtract(x1, x0, y1, y0, z1, z0), self.subtract(x2, x0, y2, y0, z2, z0)))
                 normal = np.cross(np.subtract(v1,v0), np.subtract(v2,v0))
-                #print(normal)
-                """print("-------------------Frobenius---------------------")
+                print(normal)
+                print("-------------------Frobenius---------------------")
                 print(np.linalg.norm(normal)) 
                 print(self.frobenius(self.cross(self.subtract(x1, x0, y1, y0, z1, z0), self.subtract(x2, x0, y2, y0, z2, z0))))"""
-                print("-----------normal------------")
+                """print("-----------normal------------")
                 print(normal / np.linalg.norm(normal))
                 #print((self.cross(self.subtract(x1, x0, y1, y0, z1, z0), self.subtract(x2, x0, y2, y0, z2, z0)))/(self.frobenius(self.cross(self.subtract(x1, x0, y1, y0, z1, z0), self.subtract(x2, x0, y2, y0, z2, z0)))))
                 print(self.division(self.cross(self.subtract(x1, x0, y1, y0, z1, z0), self.subtract(x2, x0, y2, y0, z2, z0)),self.frobenius(self.cross(self.subtract(x1, x0, y1, y0, z1, z0), self.subtract(x2, x0, y2, y0, z2, z0))) ))
-                normal = normal / np.linalg.norm(normal)
-                intensity = np.dot(normal, light)
+                """
+
+                #----------FORMULA CON FUNCIONES POR MI---------------
+               #normal=productoCruz(V1-V0, v2-V0)/Frobenius
+
+
+                normalMI=self.division(self.cross(self.subtract(x1, x0, y1, y0, z1, z0), self.subtract(x2, x0, y2, y0, z2, z0)),self.frobenius(self.cross(self.subtract(x1, x0, y1, y0, z1, z0), self.subtract(x2, x0, y2, y0, z2, z0))) )
+                #ProductoCruz(normal,light)
+
+                intensity = self.dot(normalMI, lightx, lighty, lightz)
+                """print("--------------intensity----------------------------")
+                print(intensity)
+                print(self.dot(normalMI, lightx, lighty, lightz))"""
 
                 if intensity >=0:
                     self.triangle_bc(x0,x1,x2, y0, y1, y2, z0, z1, z2, color(intensity, intensity, intensity))
