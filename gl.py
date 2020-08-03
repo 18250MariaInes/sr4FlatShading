@@ -301,7 +301,20 @@ class Render(object):
                     if z > self.zbuffer[y][x]:
                         self.glVertex_coord(x, y, color)
                         self.zbuffer[y][x] = z
+    def subtract(self, x0, x1, y0, y1, z0, z1):
+        res=[]
+        res.append(x0-x1)
+        res.append(y0-y1)
+        res.append(z0-z1)
+        return res
     
+    def cross(self, v0, v1):
+        res=[]
+        res.append(v0[1]*v1[2]-v1[1]*v0[2])
+        res.append(-(v0[0]*v1[2]-v1[0]*v0[2]))
+        res.append(v0[0]*v1[1]-v1[0]*v0[1])
+        return res
+
     def loadModel(self, filename, translate, scale, isWireframe = False): #funcion para crear modelo Obj
         model = Obj(filename)
         lightx=0
@@ -343,6 +356,16 @@ class Render(object):
                 v0=V3(x0, y0, z0)
                 v1=V3(x1, y1, z1)
                 v2=V3(x2, y2, z2)
+                print("------------SUBSTRACT----------------------")
+                print(v1)
+                print(v0)
+                print(np.subtract(v1,v0))
+                print(self.subtract(x1, x0, y1, y0, z1, z0))
+                print("------------CROSS----------------------")
+                print(np.cross(np.subtract(v1,v0), np.subtract(v2,v0)))
+                print(self.cross(self.subtract(x1, x0, y1, y0, z1, z0), self.subtract(x2, x0, y2, y0, z2, z0)))
+
+
 
                 normal = np.cross(np.subtract(v1,v0), np.subtract(v2,v0))
                 normal = normal / np.linalg.norm(normal)
