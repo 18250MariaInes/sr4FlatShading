@@ -315,6 +315,24 @@ class Render(object):
         res.append(v0[0]*v1[1]-v1[0]*v0[1])
         return res
 
+    def frobenius(self, norm):
+        return((norm[0]**2+norm[1]**2+norm[2]**2)**(1/2))
+
+    def division(self, norm, frobenius):
+        if (frobenius==0):
+            res=[]
+            res.append(float('NaN'))
+            res.append(float('NaN'))
+            res.append(float('NaN'))
+            return res
+            #return float('NaN')
+        else:
+            res=[]
+            res.append(norm[0]/ frobenius)
+            res.append(norm[1]/ frobenius)
+            res.append(norm[2]/ frobenius)
+            return res
+
     def loadModel(self, filename, translate, scale, isWireframe = False): #funcion para crear modelo Obj
         model = Obj(filename)
         lightx=0
@@ -356,18 +374,26 @@ class Render(object):
                 v0=V3(x0, y0, z0)
                 v1=V3(x1, y1, z1)
                 v2=V3(x2, y2, z2)
-                print("------------SUBSTRACT----------------------")
+                """print("------------SUBSTRACT----------------------")
                 print(v1)
                 print(v0)
                 print(np.subtract(v1,v0))
                 print(self.subtract(x1, x0, y1, y0, z1, z0))
                 print("------------CROSS----------------------")
                 print(np.cross(np.subtract(v1,v0), np.subtract(v2,v0)))
-                print(self.cross(self.subtract(x1, x0, y1, y0, z1, z0), self.subtract(x2, x0, y2, y0, z2, z0)))
+                print(self.cross(self.subtract(x1, x0, y1, y0, z1, z0), self.subtract(x2, x0, y2, y0, z2, z0)))"""
 
 
 
                 normal = np.cross(np.subtract(v1,v0), np.subtract(v2,v0))
+                #print(normal)
+                """print("-------------------Frobenius---------------------")
+                print(np.linalg.norm(normal)) 
+                print(self.frobenius(self.cross(self.subtract(x1, x0, y1, y0, z1, z0), self.subtract(x2, x0, y2, y0, z2, z0))))"""
+                print("-----------normal------------")
+                print(normal / np.linalg.norm(normal))
+                #print((self.cross(self.subtract(x1, x0, y1, y0, z1, z0), self.subtract(x2, x0, y2, y0, z2, z0)))/(self.frobenius(self.cross(self.subtract(x1, x0, y1, y0, z1, z0), self.subtract(x2, x0, y2, y0, z2, z0)))))
+                print(self.division(self.cross(self.subtract(x1, x0, y1, y0, z1, z0), self.subtract(x2, x0, y2, y0, z2, z0)),self.frobenius(self.cross(self.subtract(x1, x0, y1, y0, z1, z0), self.subtract(x2, x0, y2, y0, z2, z0))) ))
                 normal = normal / np.linalg.norm(normal)
                 intensity = np.dot(normal, light)
 
