@@ -154,6 +154,51 @@ class Render(object):
 
 
         archivo.close()
+    
+    def glZBuffer(self, filename):
+        archivo = open(filename, 'wb')
+        #misma configuracion de espacio que glFinish
+        # File header 14 bytes
+        archivo.write(bytes('B'.encode('ascii')))
+        archivo.write(bytes('M'.encode('ascii')))
+        archivo.write(dword(14 + 40 + self.width * self.height * 3))
+        archivo.write(dword(0))
+        archivo.write(dword(14 + 40))
+
+        # Image Header 40 bytes
+        archivo.write(dword(40))
+        archivo.write(dword(self.width))
+        archivo.write(dword(self.height))
+        archivo.write(word(1))
+        archivo.write(word(24))
+        archivo.write(dword(0))
+        archivo.write(dword(self.width * self.height * 3))
+        archivo.write(dword(0))
+        archivo.write(dword(0))
+        archivo.write(dword(0))
+        archivo.write(dword(0))
+
+        #Minimo y el maximo del Zbuffer
+        minZ = float('inf')
+        maxZ = -float('inf')
+        for x in range(self.height):
+            for y in range(self.width):
+                if self.zbuffer[x][y] != -float('inf'):
+                    if self.zbuffer[x][y] < minZ:
+                        minZ = self.zbuffer[x][y]
+
+                    if self.zbuffer[x][y] > maxZ:
+                        maxZ = self.zbuffer[x][y]
+
+        for x in range(self.height):
+            for y in range(self.width):
+                depth = self.zbuffer[x][y]
+                if depth == -float('inf'):
+                    depth = minZ
+                depth = (depth - minZ) / (maxZ - minZ)
+                archivo.write(color(depth,depth,depth))
+
+        archivo.close()
 
     def glLine(self, x0, y0, x1, y1): #algoritmo de clase modificado por mi en base al algoritmo de Bersenham extraido de : https://www.geeksforgeeks.org/bresenhams-line-generation-algorithm/
         x0 = int(( x0 + 1) * (self.vportwidth / 2 ) + self.vportx)
@@ -287,15 +332,18 @@ class Render(object):
 
         for x in range(minX, maxX + 1):
             for y in range(minY, maxY + 1):
+                if x >= self.width or x < 0 or y >= self.height or y < 0: #para no dar error al intentar dibujar fuera del zbuffer
+                    continue
                 u, v, w = baryCoords(Ax, Bx, Cx, Ay, By, Cy, x,y)
 
                 if u >= 0 and v >= 0 and w >= 0:
 
                     z = Az * u + Bz * v + Cz * w
-
+                    
                     if z > self.zbuffer[y][x]:
                         self.glVertex_coord(x, y, color)
                         self.zbuffer[y][x] = z
+                    
     #funciones para reemplazar numpy del ejemplo de Carlos
     #Realiza la resta entre 2 listas
     def subtract(self, x0, x1, y0, y1, z0, z1):
